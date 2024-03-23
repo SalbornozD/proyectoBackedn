@@ -1,0 +1,47 @@
+<section>
+    <h1>Administrar productos</h1>
+
+    <div>
+        <h2>Creacion de productos</h2>
+        <form action="/api/products/" method="post" id="form-product">
+            <ul>
+                <li>
+                    <label for="titulo">Titulo:</label>
+                    <input type="text" name="tittle" id="titulo">
+                </li>
+                <li>
+                    <label for="descripcion">Descripcion</label>
+                    <input type="text" name="description" id="descripcion">
+                </li>
+                <li>
+                    <label for="precio">Precio</label>
+                    <input type="number" name="price" id="precio">
+                </li>
+                <li>
+                    <label for="imagen">Imagenes</label>
+                    <input type="text" name="thumbnail" id="imagen">
+                </li>
+                <li>
+                    <label for="code">Code</label>
+                    <input type="text" name="code" id="code">
+                </li>
+                <li>
+                    <label for="stock">Stock</label>
+                    <input type="number" name="stock" id="stock">
+                </li>
+            </ul>
+            <button type="submit" id="btn-enviar" >Enviar</button>
+        </form>
+    </div>
+    <div>
+        <h2>Listado de productos</h2>
+        <ol>
+            {{#each productos}}
+            <li>{{this.tittle}}</li>
+            {{/each}}
+        </ol>
+    </div>
+
+</section>
+<script src="/socket.io/socket.io.js"></script>
+<script src="/js/index.js"></script>
