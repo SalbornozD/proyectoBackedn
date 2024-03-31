@@ -1,4 +1,3 @@
-// users.models.js
 const Mongoose = require('mongoose');
 const bcrypt = require('bcrypt');
 

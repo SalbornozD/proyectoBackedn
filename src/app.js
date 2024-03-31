@@ -1,61 +1,54 @@
-const express = require("express");
-const handlebars = require("express-handlebars");
-const path = require('path');
-const SocketServer = require('socket.io');
+require('dotenv').config();
+const express = require('express');
 const mongoose = require('mongoose');
-const passport = require('passport'); // Importar passport
-require('./passport'); // Importar la configuración de Passport (ajusta la ruta según sea necesario)
+const passport = require('passport');
+const cookieParser = require('cookie-parser');
+const cors = require('cors');
+const path = require('path');
 
+// Importación de rutas
+const authRoutes = require('./routes/userRoutes');
 const productRoutes = require('./routes/productRoutes');
-const cartsRoutes = require('./routes/cartsRoutes');
-const viewsRouter = require('./routes/viewsRoutes');
-const messageModel = require('./dao/models/messagesModel')
+const cartRoutes = require('./routes/cartRoutes');
+const viewRoutes = require('./routes/viewRoutes');
 
+// Inicialización de la aplicación Express
 const app = express();
-const PORT = 5000;
-const API_PREFIX = "api";
+const PORT = process.env.PORT || 3000;
 
-// Configuración de express
+// Conexión a la base de datos
+mongoose.connect(process.env.DB_URI, { useNewUrlParser: true, useUnifiedTopology: true })
+  .then(() => console.log('Connected to the database successfully'))
+  .catch(err => console.error('Could not connect to the database', err));
+
+// Middleware
+app.use(cors());
 app.use(express.json());
-app.use(express.urlencoded({extended: true}));
+app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
+app.use(express.static(path.join(__dirname, 'public')));
 
-// Configuración de websocket
-const httpServer = app.listen(PORT, () => console.log("Servidor corriendo en el puerto ", PORT));
-const socketServer = SocketServer(httpServer);
-
-// Configuración DB
-mongoose.connect('mongodb+srv://Salbornoz:Sjnt110102@backend.or438wf.mongodb.net/?retryWrites=true&w=majority&appName=Backend')
-  .then(() => {
-    console.log('Conexión exitosa a la base de datos');
-  })
-  .catch(error => {
-    console.error('Error de conexión a la base de datos:', error);
-    process.exit(1);
-  });
-
-// Configuración Handlebars
-app.engine('handlebars', handlebars.engine());
-app.set('views', path.join(__dirname, '/views'));
-app.set('view engine', 'handlebars');
-
-// Configuración carpeta public
-app.use(express.static(path.join(__dirname, '/public')));
-
-// Inicializar Passport
+// Configuración de Passport
+require('./utils/passport'); 
 app.use(passport.initialize());
 
-// RUTAS
-app.use('/', viewsRouter);
-app.use(`/${API_PREFIX}/products`, productRoutes);
-app.use(`/${API_PREFIX}/carts`, cartsRoutes);
+// Configuración del motor de plantillas Handlebars
+app.set('views', path.join(__dirname, 'views'));
+app.set('view engine', 'handlebars');
 
-// socketServer
-socketServer.on('connection', socket => {
-    console.log("Nuevo cliente conectado");
+// Rutas
+app.use('/', viewRoutes);
+app.use('/api/auth', authRoutes);
+app.use('/api/products', productRoutes);
+app.use('/api/carts', cartRoutes);
 
-    socket.on('message', async (data) => {
-        await messageModel.create(data);
-        messages = await messageModel.find();
-        socketServer.emit('messageLogs', messages)
-    })
+// Manejador de errores genérico
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).send('Something broke!');
+});
+
+// Iniciar el servidor
+app.listen(PORT, () => {
+  console.log(`Server is running on http://localhost:${PORT}`);
 });
