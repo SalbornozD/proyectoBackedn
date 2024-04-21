@@ -1,33 +1,54 @@
-const socket = io();
-let user;
-let chatBox = document.getElementById("chatBox");
+document.addEventListener('DOMContentLoaded', function () {
+    const socket = io();
 
-Swal.fire({
-    title: "Identificate",
-    input: "text",
-    text: "Ingresa el usuario para identificarte en el chat",
-    inputValidator: (value) => {
-        return !value && 'Necesitas escribir un nombre de usuario para continuar!'
-    },
-    allowOutsideClick: false
-}) .then(result => {
-    user = result.value;
-})
+    // Captura los elementos de la interfaz
+    let chatBox = document.getElementById('chatBox');
+    let sendButton = document.getElementById('sendButton');
+    let messagesList = document.getElementById('messagesList');
+    let userName = '';
 
-chatBox.addEventListener('keyup', evt => {
-    if(evt.key === 'Enter'){
-        if(chatBox.value.trim().length>0){
-            socket.emit("message", {user:user, message: chatBox.value});
-            chatBox.value = "";
-        };
-    };
-});
+    // Solicita al usuario su nombre para usar en el chat
+    userName = prompt('Please enter your name to join the chat:', 'Guest');
 
-socket.on('messageLogs', data => {
-    let log = document.getElementById('messageLogs');
-    let messages = "";
-    data.forEach(message => {
-        messages = messages + `${message.user} dice: ${message.message} </br>`
+    // Función para enviar mensajes
+    function sendMessage() {
+        if (chatBox.value.trim()) {
+            const message = chatBox.value.trim();
+            socket.emit('newMessage', { user: userName, message: message });
+            chatBox.value = '';
+        }
+    }
+
+    // Evento de tecla 'Enter' para enviar mensajes
+    chatBox.addEventListener('keypress', function (e) {
+        if (e.key === 'Enter') {
+            sendMessage();
+            e.preventDefault();
+        }
     });
-    log.innerHTML = messages;
-})
+
+    // Evento click en el botón de enviar
+    sendButton.addEventListener('click', function (e) {
+        sendMessage();
+        e.preventDefault();
+    });
+
+    // Escucha eventos de nuevos mensajes desde el servidor
+    socket.on('message', function (data) {
+        const messageItem = document.createElement('li');
+        messageItem.textContent = `${data.user} says: ${data.message}`;
+        messagesList.appendChild(messageItem);
+    });
+
+    // Manejo de errores de conexión
+    socket.on('connect_error', () => {
+        displayStatus('Error connecting to the chat server');
+    });
+
+    // Función para mostrar el estado de la conexión
+    function displayStatus(status) {
+        const statusElement = document.createElement('li');
+        statusElement.textContent = status;
+        messagesList.appendChild(statusElement);
+    }
+});

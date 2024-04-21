@@ -9,32 +9,34 @@ const path = require('path');
 // Importación de rutas
 const authRoutes = require('./routes/userRoutes');
 const productRoutes = require('./routes/productRoutes');
-const cartRoutes = require('./routes/cartRoutes');
-const viewRoutes = require('./routes/viewRoutes');
+const cartRoutes = require('./routes/cartsRoutes');
+const viewRoutes = require('./routes/viewsRoutes');
 
 // Inicialización de la aplicación Express
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Conexión a la base de datos
-mongoose.connect(process.env.DB_URI, { useNewUrlParser: true, useUnifiedTopology: true })
-  .then(() => console.log('Connected to the database successfully'))
-  .catch(err => console.error('Could not connect to the database', err));
+// Conexión a la base de datos MongoDB
+mongoose.connect(process.env.DB_URI, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+  useCreateIndex: true 
+})
+.then(() => console.log('Connected to MongoDB successfully'))
+.catch(err => console.error('Could not connect to MongoDB', err));
 
-// Middleware
-app.use(cors());
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-app.use(cookieParser());
-app.use(express.static(path.join(__dirname, 'public')));
+// Middlewares
+app.use(cors()); // Permite solicitudes cross-origin
+app.use(express.json()); // Parsea JSON en el body de las solicitudes
+app.use(express.urlencoded({ extended: true })); // Parsea URL-encoded bodies
+app.use(cookieParser()); // Parsea cookies
 
-// Configuración de Passport
-require('./utils/passport'); 
+// Configuración de Passport para la autenticación con JWT
+require('./utils/passport');
 app.use(passport.initialize());
 
-// Configuración del motor de plantillas Handlebars
-app.set('views', path.join(__dirname, 'views'));
-app.set('view engine', 'handlebars');
+// Sirve archivos estáticos desde la carpeta 'public'
+app.use(express.static(path.join(__dirname, 'public')));
 
 // Rutas
 app.use('/', viewRoutes);
@@ -42,7 +44,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/carts', cartRoutes);
 
-// Manejador de errores genérico
+// Manejador de errores
 app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(500).send('Something broke!');

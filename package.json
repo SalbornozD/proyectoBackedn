@@ -1,7 +1,7 @@
 {
   "name": "pre-entrega-proyecto",
   "version": "1.0.0",
-  "description": "Esta es la primera pre-entrega del proyecto para el curso de programación backend de CoderHouse.",
+  "description": "Esta es la tercera pre-entrega del proyecto para el curso de programación backend de CoderHouse.",
   "main": "app.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"

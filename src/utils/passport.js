@@ -1,27 +1,25 @@
+// passport.js
 const passport = require('passport');
 const { Strategy: JwtStrategy, ExtractJwt } = require('passport-jwt');
-const userModel = require('../models/userModel'); 
-
-// Cargar las variables de entorno desde config.js o directamente
-const { jwtSecret } = require('../config'); 
-
+const User = require('../dao/models/userModel');
 const options = {
-    jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
-    secretOrKey: jwtSecret, 
+  jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+  secretOrKey: process.env.JWT_SECRET,
+  algorithms: ['HS256']
 };
 
 passport.use(new JwtStrategy(options, async (jwt_payload, done) => {
-    try {
-        const user = await userModel.findById(jwt_payload.sub);
-
-        if (user) {
-            return done(null, user);
-        } else {
-            return done(null, false);
-        }
-    } catch (error) {
-        return done(error, false);
+  try {
+    // Buscar el usuario en la base de datos con el ID extraído del JWT
+    const user = await User.findById(jwt_payload.userId);
+    if (user) {
+      return done(null, user);  // Usuario encontrado
+    } else {
+      return done(null, false);  // No se encontró el usuario
     }
+  } catch (error) {
+    return done(error, false);
+  }
 }));
 
 module.exports = passport;

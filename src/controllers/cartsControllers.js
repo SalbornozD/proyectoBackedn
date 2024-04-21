@@ -1,23 +1,40 @@
-const cartsModel = require('../dao/models/cartsModel');
-const productsModel = require('../dao/models/productsModel');
+const Cart = require('../dao/models/cartsModel');
 
-exports.createCart = async (req, res) => {
-    try {
-        const newCart = await cartsModel.create({ products: [] });
-        res.status(201).send(newCart);
-    } catch (error) {
-        res.status(500).send({ message: 'Error creating cart' });
-    }
+exports.getAllCarts = async (req, res) => {
+  try {
+    const carts = await Cart.find();
+    res.json(carts);
+  } catch (error) {
+    res.status(500).send({ message: error.message });
+  }
 };
 
 exports.getCartById = async (req, res) => {
-    try {
-        const cart = await cartsModel.findById(req.params.cid).populate('products.product');
-        if (!cart) {
-            return res.status(404).send({ message: 'Cart not found' });
-        }
-        res.json(cart);
-    } catch (error) {
-        res.status(500).send({ message: 'Error fetching cart' });
+  try {
+    const cart = await Cart.findById(req.params.cartId);
+    if (!cart) {
+      return res.status(404).send({ message: 'Cart not found' });
     }
+    res.json(cart);
+  } catch (error) {
+    res.status(500).send({ message: error.message });
+  }
+};
+
+exports.createCart = async (req, res) => {
+  try {
+    const newCart = new Cart(req.body);
+    await newCart.save();
+    res.status(201).send(newCart);
+  } catch (error) {
+    res.status(500).send({ message: error.message });
+  }
+};
+
+exports.addProductToCart = async (req, res) => {
+  // Implementation for adding product to cart
+};
+
+exports.removeProductFromCart = async (req, res) => {
+  // Implementation for removing product from cart
 };
